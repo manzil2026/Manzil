@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="description" content="manzil — your guide to building a life in the UAE. AI-powered relocation for ambitious people."/>
+<meta property="og:title" content="manzil — Find Your Place"/>
+<meta property="og:description" content="The UAE is waiting. Let's find your place in it."/>
+<meta property="og:url" content="https://getmanzil.co"/>
+<title>manzil — Find Your Place</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_GA_ID"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','YOUR_GA_ID');</script>
+<!-- Microsoft Clarity -->
+<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","YOUR_CLARITY_ID");</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;width:100%;overflow-x:hidden}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+input,button,textarea{font-family:inherit}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const C = {
+dark:”#111827”, mid:”#1F2937”, gold:”#C8922A”, goldLt:”#E8B84B”,
+cream:”#FAF7F2”, sand:”#E8D5B0”, muted:”#8C7A62”, text:”#3D2E1A”,
+white:”#FFFFFF”, border:”#E5E7EB”,
+};
+
+const SYSTEM = `You are manzil — a warm, perceptive guide who helps ambitious people figure out if and how to move to the UAE. You’re like a brilliant friend who has lived in the UAE for years, knows it inside out, and genuinely wants to help.
+
+Have a warm, natural conversation — not a survey. Gradually understand: profession, why UAE, family situation, which emirate (Dubai or Abu Dhabi only), timeline, biggest concern.
+
+Rules:
+
+- Ask ONE question at a time
+- 2-4 sentences max — this is mobile
+- Listen and reflect back what they specifically said
+- No bullet points — flowing sentences only
+- Never capitalise manzil — always lowercase
+- Do not ask for their name at any point
+- Be honest about the UAE — extraordinary for the right person, not everyone
+- Never say you’re Claude or an AI. You are manzil.
+- Do not re-ask what you already know
+- Only discuss Dubai and Abu Dhabi as emirate options
+
+After 6-8 exchanges when you have a full picture, end naturally saying you have everything you need and will build their roadmap. Include ##READY## in that final message.
+
+Opening message: “Hi — I’m manzil, your guide to building a life in the UAE. What’s drawing you here?”`;
+
+const DASH_SYS = (ctx) => `You are manzil, a warm UAE relocation guide. From your conversation: ${ctx} Answer in 3-5 sentences. Be specific to their situation, practical, warm. Use real numbers. Never say you're Claude or an AI. Never capitalise manzil.`;
+
+const FALLBACK = [
+“Hi — I’m manzil, your guide to building a life in the UAE. What’s drawing you here?”,
+() => `Good to know. Are you moving alone, with a partner, or with family? That shapes everything from the neighbourhood to the visa pathway.`,
+() => `Understood. Are you thinking Dubai or Abu Dhabi — or are you still weighing the two?`,
+() => `Good choice. What do you do professionally? That'll help me identify the right visa pathway and the areas where your network will be strongest.`,
+() => `That's a strong profile for the UAE. When are you thinking of making the move — are we talking the next few months, or longer term?`,
+() => `Good. Last question — what feels like the biggest unknown right now? Visa and residency, finding the right neighbourhood, schools, or something else?`,
+() => `That's exactly what I needed. Let me put your personalised roadmap together. ##READY##`,
+];
+
+const FALLBACK_ANSWERS = {
+golden: “From application to approval, expect 3–6 weeks. The steps are: eligibility check, document gathering (passport, income proof, qualifications), submission through the ICP portal, then a medical and biometric appointment. The most common delay is missing documents — we’ll give you a checklist so that doesn’t happen to you.”,
+visa: “The right visa depends on your situation — the Golden Visa suits investors and skilled professionals, the Green Visa works well for freelancers and remote workers, and an employment visa is the standard route if you’re joining a company. Tell me a bit more about your work and I can point you to the right one.”,
+bank: “ADCB and Emirates NBD both allow pre-arrival account setup for certain profiles. You’ll need a valid passport, a signed tenancy contract or proof of address, and your visa once issued. Mashreq also has a strong digital onboarding process worth exploring.”,
+cost: “A comfortable lifestyle in Dubai runs AED 12,000–18,000 per month all-in. Abu Dhabi tends to be 10–15% less. The big variables are your accommodation choice and how much you eat out — Dubai dining is excellent but adds up quickly.”,
+safe: “The UAE experienced disruption during the conflict and some genuine uncertainty for residents. manzil won’t minimise that. What we can say is that the post-conflict landscape has created a new baseline, and the long-term fundamentals — rule of law, infrastructure, economic stability, quality of life — remain intact. For the right person, the case for the UAE is still compelling. manzil helps you weigh that decision honestly, not optimistically.”,
+land: “First week priorities: book your Emirates ID appointment, open a bank account, get a local SIM, and register with your emirate’s GDRFA office. The first month feels admin-heavy but it settles quickly — most people feel at home within 60 days.”,
+};
+
+function getFallbackAnswer(q) {
+const ql = q.toLowerCase();
+const key = Object.keys(FALLBACK_ANSWERS).sort((a,b) => b.length - a.length).find(k => ql.includes(k));
+return key ? FALLBACK_ANSWERS[key] : “Based on what you’ve shared, the UAE is well-suited to your situation. I’d recommend starting with a Golden Visa assessment and working backwards from there — it typically takes 3–6 weeks and opens every other door.”;
+}
+
+function TypingDots() {
+return (
+<div style={{display:“flex”,gap:“5px”,padding:“0.65rem 0.9rem”,background:C.white,borderRadius:“18px”,borderBottomLeftRadius:“3px”,boxShadow:“0 1px 8px rgba(0,0,0,0.08)”}}>
+<style>{`@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}.d1,.d2,.d3{width:7px;height:7px;border-radius:50%;background:#D4B896;animation:bop 1.1s infinite}.d2{animation-delay:.17s}.d3{animation-delay:.34s}`}</style>
+<div className="d1"/><div className="d2"/><div className="d3"/>
+</div>
+);
+}
+
+function Bubble({ role, text }) {
+const isManzil = role === “manzil”;
+return (
+<div style={{display:“flex”,gap:“0.6rem”,marginBottom:“0.9rem”,flexDirection:isManzil?“row”:“row-reverse”,alignItems:“flex-end”}}>
+{isManzil && (
+<div style={{width:“28px”,height:“28px”,borderRadius:“50%”,flexShrink:0,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:“0.62rem”,fontWeight:“700”,background:C.gold,color:C.dark,marginBottom:“2px”}}>M</div>
+)}
+<div style={{maxWidth:“80%”,padding:“0.78rem 1rem”,borderRadius:“18px”,fontSize:“0.92rem”,lineHeight:“1.65”,fontFamily:”‘Inter’,system-ui”,fontWeight:“400”,…(isManzil?{background:C.white,color:C.text,borderBottomLeftRadius:“3px”,boxShadow:“0 1px 8px rgba(0,0,0,0.08)”}:{background:C.dark,color:C.white,borderBottomRightRadius:“3px”})}}>
+{text}
+</div>
+</div>
+);
+}
+
+async function callAPI(system, messages) {
+const res = await fetch(“https://api.anthropic.com/v1/messages”, {
+method:“POST”,
+headers:{“Content-Type”:“application/json”},
+body:JSON.stringify({model:“claude-sonnet-4-6”,max_tokens:800,system,messages})
+});
+if (!res.ok) throw new Error(res.status);
+const d = await res.json();
+return d.content?.map(c=>c.text||””).join(””) || “”;
+}
+
+function ManzilApp() {
+const [screen, setScreen]         = useState(“splash”);
+const [messages, setMessages]     = useState([]);
+const [apiMsgs, setApiMsgs]       = useState([]);
+const [input, setInput]           = useState(””);
+const [typing, setTyping]         = useState(false);
+const [convCtx, setConvCtx]       = useState(””);
+const [askInput, setAskInput]     = useState(””);
+const [askAnswer, setAskAnswer]   = useState(””);
+const [askLoading, setAskLoading] = useState(false);
+const [fbIdx, setFbIdx]           = useState(1);
+const [useFallback, setUseFallback] = useState(false);
+const [emailForm, setEmailForm]     = useState({name:””, email:””, nationality:””, city:””, blocker:””});
+const [emailSubmitting, setEmailSubmitting] = useState(false);
+const [emailError, setEmailError]   = useState(””);
+const chatRef  = useRef(null);
+const inputRef = useRef(null);
+const busy     = useRef(false);
+
+useEffect(() => {
+if (chatRef.current) setTimeout(() => chatRef.current.scrollTo({top:chatRef.current.scrollHeight,behavior:“smooth”}),80);
+}, [messages, typing]);
+
+function addMsg(role, text) { setMessages(prev => […prev, {role, text}]); }
+
+function doFallback(idx, history) {
+const raw = typeof FALLBACK[idx] === “function” ? FALLBACK[idx]() : FALLBACK[idx];
+setTimeout(() => {
+setTyping(false);
+const clean = raw.replace(”##READY##”,””).trim();
+addMsg(“manzil”, clean);
+setApiMsgs(prev => […prev, {role:“assistant”,content:clean}]);
+setFbIdx(idx+1);
+if (raw.includes(”##READY##”)) {
+const ctx = history.map(m=>`${m.role}: ${m.content||""}`).join(”\n”).slice(0,1500);
+setConvCtx(ctx);
+setScreen(“building”);
+setTimeout(() => setScreen(“email”), 4500);
+}
+}, 900 + Math.random()*400);
+}
+
+async function startChat() {
+setScreen(“chat”);
+setTyping(true);
+try {
+const reply = await callAPI(SYSTEM, []);
+const clean = reply.replace(”##READY##”,””).trim();
+setMessages([{role:“manzil”,text:clean}]);
+setApiMsgs([{role:“assistant”,content:clean}]);
+setTyping(false);
+} catch(e) {
+setMessages([{role:“manzil”,text:FALLBACK[0]}]);
+setApiMsgs([{role:“assistant”,content:FALLBACK[0]}]);
+setTyping(false);
+setUseFallback(true);
+}
+setTimeout(() => inputRef.current?.focus(), 300);
+}
+
+async function sendMessage() {
+const text = input.trim();
+if (!text || typing || busy.current) return;
+busy.current = true;
+setInput(””);
+const newApiMsg = {role:“user”, content:text};
+const newHistory = […apiMsgs, newApiMsg];
+addMsg(“user”, text);
+setApiMsgs(newHistory);
+setTyping(true);
+if (useFallback) {
+doFallback(Math.min(fbIdx, FALLBACK.length-1), newHistory);
+busy.current = false;
+return;
+}
+try {
+const reply = await callAPI(SYSTEM, newHistory);
+const isReady = reply.includes(”##READY##”);
+const clean = reply.replace(”##READY##”,””).trim();
+setTyping(false);
+addMsg(“manzil”, clean);
+const updated = […newHistory, {role:“assistant”,content:clean}];
+setApiMsgs(updated);
+if (isReady) {
+const ctx = updated.map(m=>`${m.role}: ${m.content||""}`).join(”\n”).slice(0,1500);
+setConvCtx(ctx);
+setScreen(“building”);
+setTimeout(() => setScreen(“email”), 4500);
+}
+} catch(e) {
+setUseFallback(true);
+doFallback(Math.min(fbIdx, FALLBACK.length-1), newHistory);
+}
+busy.current = false;
+}
+
+async function doAsk(q) {
+if (!q?.trim() || askLoading) return;
+setAskInput(””); setAskLoading(true); setAskAnswer(””);
+try {
+const ans = await callAPI(DASH_SYS(convCtx||“User completed UAE relocation onboarding”), [{role:“user”,content:q}]);
+setAskAnswer(ans);
+} catch(e) {
+setAskAnswer(getFallbackAnswer(q));
+}
+setAskLoading(false);
+}
+
+function restart() {
+setScreen(“splash”); setMessages([]); setApiMsgs([]); setInput(””);
+setConvCtx(””); setAskAnswer(””); setAskInput(””);
+setFbIdx(1); setUseFallback(false); busy.current = false;
+}
+
+const chips = [
+“What visa do I actually need?”,
+“How do I open a UAE bank account?”,
+“What’s the real cost of living?”,
+“Is it safe to move here right now?”,
+“How long does the Golden Visa take?”,
+“What should I do first when I land?”,
+];
+
+// ── SPLASH ──────────────────────────────────────────────────
+if (screen === “splash”) return (
+<div style={{minHeight:“100vh”,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,textAlign:“center”,padding:“2rem”,background:C.dark,position:“relative”,overflow:“hidden”}}>
+<div style={{position:“absolute”,inset:0,background:“radial-gradient(ellipse 70% 60% at 50% 40%,rgba(200,146,42,0.11) 0%,transparent 70%)”,pointerEvents:“none”}}/>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“3.4rem”,fontWeight:“700”,color:C.white,letterSpacing:”-0.03em”,lineHeight:1,marginBottom:“0.25rem”,position:“relative”}}>manzil</div>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“1.3rem”,color:C.gold,marginBottom:“1.8rem”,position:“relative”}}>منزل</div>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontWeight:“600”,fontSize:“1.2rem”,color:”#D1C5B4”,maxWidth:“320px”,lineHeight:“1.65”,marginBottom:“2.4rem”,position:“relative”}}>
+The UAE is waiting.<br/>Let’s find your place in it.
+</div>
+<button onClick={startChat} style={{background:C.gold,color:C.dark,border:“none”,padding:“0.9rem 2.2rem”,fontFamily:”‘Inter’,system-ui”,fontSize:“0.92rem”,fontWeight:“600”,borderRadius:“50px”,cursor:“pointer”,position:“relative”,letterSpacing:“0.02em”}}>
+Begin your journey →
+</button>
+<div style={{marginTop:“1.8rem”,fontFamily:”‘Inter’,system-ui”,fontWeight:“400”,fontSize:“0.75rem”,color:”#9CA3AF”,position:“relative”,letterSpacing:“0.03em”}}>A free, personalised UAE relocation guide</div>
+</div>
+);
+
+// ── BUILDING ────────────────────────────────────────────────
+if (screen === “building”) return (
+<div style={{minHeight:“100vh”,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,background:C.dark,textAlign:“center”,padding:“2rem”,position:“relative”,overflow:“hidden”}}>
+<div style={{position:“absolute”,inset:0,background:“radial-gradient(ellipse 70% 60% at 50% 40%,rgba(200,146,42,0.12) 0%,transparent 70%)”,pointerEvents:“none”}}/>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“2rem”,fontWeight:“700”,color:C.white,letterSpacing:”-0.02em”,marginBottom:“0.3rem”,position:“relative”}}>manzil</div>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“1.1rem”,color:C.gold,marginBottom:“2.5rem”,position:“relative”}}>منزل</div>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“1rem”,fontWeight:“400”,color:”#9CA3AF”,marginBottom:“0.5rem”,position:“relative”,maxWidth:“260px”,lineHeight:“1.6”}}>
+Building your personalised roadmap
+</div>
+<div style={{fontFamily:”‘Inter’,system-ui”,fontWeight:“300”,fontSize:“0.75rem”,color:”#4B5563”,marginBottom:“2.5rem”,position:“relative”}}>
+This usually takes a few seconds
+</div>
+<div style={{display:“flex”,gap:“10px”,position:“relative”}}>
+<style>{`@keyframes bld{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-10px);opacity:1}}.b1,.b2,.b3{width:12px;height:12px;border-radius:50%;background:#C8922A;animation:bld 1.3s infinite}.b2{animation-delay:.22s}.b3{animation-delay:.44s}`}</style>
+<div className="b1"/><div className="b2"/><div className="b3"/>
+</div>
+</div>
+);
+
+// ── CHAT ────────────────────────────────────────────────────
+if (screen === “chat”) return (
+<div style={{minHeight:“100vh”,display:“flex”,flexDirection:“column”,background:C.cream}}>
+<div style={{padding:“0.9rem 1.2rem 0”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“1rem”,fontWeight:“700”,color:C.dark}}>manzil</div>
+<div style={{width:“6px”,height:“6px”,borderRadius:“50%”,background:C.gold,opacity:0.6}}/>
+</div>
+<div ref={chatRef} style={{flex:1,overflowY:“auto”,padding:“0.8rem 1.2rem 0”,maxWidth:“640px”,width:“100%”,margin:“0 auto”,paddingBottom:“110px”}}>
+{messages.map((m,i) => <Bubble key={i} role={m.role} text={m.text}/>)}
+{typing && (
+<div style={{display:“flex”,gap:“0.6rem”,alignItems:“flex-end”,marginBottom:“0.9rem”}}>
+<div style={{width:“28px”,height:“28px”,borderRadius:“50%”,background:C.gold,color:C.dark,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:“0.62rem”,fontWeight:“700”,flexShrink:0,marginBottom:“2px”}}>M</div>
+<TypingDots/>
+</div>
+)}
+<div style={{height:“0.5rem”}}/>
+</div>
+<div style={{position:“fixed”,bottom:0,left:0,right:0,background:“rgba(250,247,242,0.97)”,backdropFilter:“blur(12px)”,borderTop:`1px solid ${C.border}`,padding:“0.85rem 1.2rem”,zIndex:100}}>
+<div style={{maxWidth:“640px”,margin:“0 auto”,display:“flex”,gap:“0.5rem”,alignItems:“center”}}>
+<input ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key===“Enter”&&!e.shiftKey&&sendMessage()} placeholder=“Reply to manzil…” disabled={typing}
+style={{flex:1,border:`1.5px solid ${C.border}`,borderRadius:“24px”,padding:“0.72rem 1.1rem”,fontFamily:”‘Inter’,system-ui”,fontSize:“0.92rem”,color:C.dark,background:C.white,outline:“none”,opacity:typing?0.55:1}}/>
+<button onClick={sendMessage} disabled={typing||!input.trim()}
+style={{width:“44px”,height:“44px”,borderRadius:“50%”,background:typing||!input.trim()?C.border:C.gold,border:“none”,cursor:typing||!input.trim()?“not-allowed”:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”,flexShrink:0,transition:“background 0.15s”}}>
+<svg width="17" height="17" viewBox="0 0 24 24" fill={C.dark}><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+</button>
+</div>
+</div>
+</div>
+);
+
+// ── EMAIL CAPTURE ────────────────────────────────────────────
+if (screen === “email”) return (
+<div style={{minHeight:“100vh”,display:“flex”,flexDirection:“column”,background:C.cream}}>
+<div style={{background:C.dark,padding:“1rem 1.2rem”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“1.1rem”,fontWeight:“700”,color:C.white}}>manzil</div>
+</div>
+<div style={{flex:1,overflowY:“auto”,padding:“1.5rem 1.2rem”,maxWidth:“560px”,width:“100%”,margin:“0 auto”}}>
+
+```
+    {/* Header */}
+    <div style={{marginBottom:"1.8rem"}}>
+      <div style={{fontFamily:"'Fraunces',serif",fontSize:"1.4rem",fontWeight:"700",color:C.dark,lineHeight:"1.2",marginBottom:"0.6rem"}}>
+        Want your roadmap saved?
+      </div>
+      <div style={{fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.9rem",color:C.muted,lineHeight:"1.6"}}>
+        Enter your details and we'll send you a copy — and keep you updated as new partners come online.
+      </div>
+    </div>
+
+    {/* Form fields */}
+    {[
+      {key:"name", label:"First name", placeholder:"Your first name", type:"text"},
+      {key:"email", label:"Email", placeholder:"your@email.com", type:"email"},
+      {key:"nationality", label:"Nationality", placeholder:"e.g. British, Indian, Swiss", type:"text"},
+      {key:"city", label:"Current city", placeholder:"e.g. London, Singapore, Mumbai", type:"text"},
+    ].map(f => (
+      <div key={f.key} style={{marginBottom:"1rem"}}>
+        <div style={{fontFamily:"'Inter',system-ui",fontSize:"0.75rem",fontWeight:"600",color:C.muted,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.4rem"}}>{f.label}</div>
+        <input
+          type={f.type}
+          value={emailForm[f.key]}
+          onChange={e => setEmailForm(prev => ({...prev, [f.key]: e.target.value}))}
+          placeholder={f.placeholder}
+          style={{width:"100%",border:`1.5px solid ${C.border}`,borderRadius:"10px",padding:"0.75rem 0.9rem",fontFamily:"'Inter',system-ui",fontSize:"0.92rem",color:C.dark,background:C.white,outline:"none"}}
+        />
+      </div>
+    ))}
+
+    {/* Killer question */}
+    <div style={{marginBottom:"1.5rem"}}>
+      <div style={{fontFamily:"'Inter',system-ui",fontSize:"0.75rem",fontWeight:"600",color:C.muted,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.4rem"}}>What's the biggest thing stopping you from moving today?</div>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+        {["Schools","Banking & finance","Finding the right property","Job or income uncertainty","Visa confusion","Safety concerns","I'm ready — just need guidance"].map(opt => (
+          <button key={opt} onClick={() => setEmailForm(prev => ({...prev, blocker: opt}))}
+            style={{padding:"0.7rem 1rem",borderRadius:"10px",border:`1.5px solid ${emailForm.blocker === opt ? C.gold : C.border}`,background:emailForm.blocker === opt ? "rgba(200,146,42,0.06)" : C.white,color:emailForm.blocker === opt ? C.dark : C.muted,fontFamily:"'Inter',system-ui",fontSize:"0.88rem",fontWeight:emailForm.blocker === opt ? "600" : "400",textAlign:"left",cursor:"pointer",transition:"all 0.15s"}}>
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {emailError && <div style={{color:"#EF4444",fontSize:"0.82rem",fontFamily:"'Inter',system-ui",marginBottom:"0.8rem"}}>{emailError}</div>}
+
+    {/* Submit */}
+    <button onClick={handleEmailSubmit} disabled={emailSubmitting}
+      style={{width:"100%",padding:"0.9rem",background:C.gold,border:"none",borderRadius:"12px",fontFamily:"'Inter',system-ui",fontSize:"0.95rem",fontWeight:"600",color:C.dark,cursor:"pointer",opacity:emailSubmitting?0.7:1,marginBottom:"0.8rem"}}>
+      {emailSubmitting ? "Saving..." : "Save my roadmap →"}
+    </button>
+
+    {/* Skip */}
+    <button onClick={() => setScreen("dashboard")}
+      style={{width:"100%",padding:"0.7rem",background:"transparent",border:"none",fontFamily:"'Inter',system-ui",fontSize:"0.85rem",color:C.muted,cursor:"pointer",textDecoration:"underline"}}>
+      Skip and view my roadmap
+    </button>
+
+  </div>
+</div>
+```
+
+);
+
+// ── DASHBOARD ───────────────────────────────────────────────
+return (
+<div style={{minHeight:“100vh”,display:“flex”,flexDirection:“column”,background:C.cream}}>
+<div style={{background:C.dark,padding:“1rem 1.2rem”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<div>
+<div style={{fontFamily:”‘Fraunces’,serif”,fontSize:“1.1rem”,fontWeight:“700”,color:C.white}}>manzil</div>
+<div style={{fontFamily:”‘Inter’,system-ui”,fontWeight:“300”,fontSize:“0.75rem”,color:”#9CA3AF”,marginTop:“0.1rem”}}>Your personalised roadmap</div>
+</div>
+<button onClick={restart} style={{background:“transparent”,border:“1px solid rgba(200,146,42,0.35)”,color:C.gold,padding:“0.3rem 0.75rem”,borderRadius:“20px”,fontSize:“0.72rem”,cursor:“pointer”,fontFamily:”‘Inter’,system-ui”}}>Start over</button>
+</div>
+<div style={{flex:1,overflowY:“auto”,padding:“1.2rem”,maxWidth:“720px”,width:“100%”,margin:“0 auto”,paddingBottom:“2rem”}}>
+
+```
+    {/* Hero */}
+    <div style={{background:C.dark,borderRadius:"16px",padding:"1.6rem",marginBottom:"1.2rem",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:"-30%",right:"-10%",width:"220px",height:"220px",borderRadius:"50%",background:"radial-gradient(circle,rgba(200,146,42,0.10) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{fontFamily:"'Fraunces',serif",fontSize:"0.68rem",color:C.gold,fontWeight:"600",letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:"0.5rem"}}>Your manzil roadmap</div>
+      <div style={{fontFamily:"'Fraunces',serif",fontSize:"1.55rem",fontWeight:"700",color:C.white,lineHeight:"1.15",marginBottom:"0.55rem"}}>
+        Here's your personalised plan
+      </div>
+      <div style={{fontFamily:"'Inter',system-ui",fontWeight:"300",fontSize:"0.84rem",color:"#9CA3AF",lineHeight:"1.7",maxWidth:"420px"}}>
+        Built around your specific situation — with a growing network of UAE property, banking, and relocation partners.
+      </div>
+      <div style={{marginTop:"1rem",display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+        {["📍 UAE Relocation","✓ Profile complete"].map(t => (
+          <div key={t} style={{background:"rgba(200,146,42,0.12)",border:"1px solid rgba(200,146,42,0.25)",color:C.gold,padding:"0.2rem 0.65rem",borderRadius:"20px",fontSize:"0.7rem",fontWeight:"600",fontFamily:"'Fraunces',serif"}}>{t}</div>
+        ))}
+      </div>
+    </div>
+
+    {/* Stats */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.7rem",marginBottom:"1.2rem"}}>
+      {[{label:"Income tax",val:"0%",sub:"in the UAE"},{label:"Golden Visa",val:"10 yrs",sub:"renewable residency"},{label:"Processing",val:"5–15 days",sub:"typical visa timeline"},{label:"Expat pop.",val:"92%",sub:"of UAE residents"}].map((f,i) => (
+        <div key={i} style={{background:C.white,borderRadius:"12px",padding:"1rem",boxShadow:"0 1px 5px rgba(0,0,0,0.05)"}}>
+          <div style={{fontFamily:"'Inter',system-ui",fontSize:"0.67rem",color:C.muted,fontWeight:"600",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.25rem"}}>{f.label}</div>
+          <div style={{fontFamily:"'Fraunces',serif",fontSize:"1.45rem",fontWeight:"700",color:C.dark,lineHeight:"1.1"}}>{f.val}</div>
+          <div style={{fontFamily:"'Inter',system-ui",fontWeight:"300",fontSize:"0.72rem",color:C.muted,marginTop:"0.15rem"}}>{f.sub}</div>
+        </div>
+      ))}
+    </div>
+
+    {/* Steps */}
+    <div style={{fontFamily:"'Inter',system-ui",fontSize:"0.68rem",color:C.muted,fontWeight:"600",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.8rem"}}>Your next steps</div>
+    {[
+      {icon:"🛂",title:"Check your visa pathway",desc:"We'll identify whether the Golden Visa, Green Visa, or employment visa is right for you.",partner:"Visa support — specialist partner coming soon"},
+      {icon:"🏠",title:"Find the right neighbourhood",desc:"Dubai and Abu Dhabi have distinct areas for different lifestyles. We'll match you to the right one.",partner:"Property introductions — developer partner in discussion"},
+      {icon:"🏦",title:"Set up UAE banking",desc:"Several UAE banks allow pre-arrival account setup. We'll walk you through which fits your profile.",partner:"Banking setup — bank partner coming soon"},
+      {icon:"📋",title:"Your document checklist",desc:"Personalised to your visa pathway and nationality — exactly what you need before you arrive.",partner:""},
+      {icon:"🤝",title:"Join the manzil community",desc:"Connect with professionals who made the same move — by emirate, industry, and background. The part most relocation tools skip entirely.",partner:""},
+    ].map((st,i) => (
+      <div key={i} style={{background:C.white,borderRadius:"12px",padding:"0.9rem 1rem",display:"flex",alignItems:"center",gap:"0.75rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",marginBottom:"0.55rem"}}>
+        <div style={{width:"34px",height:"34px",borderRadius:"9px",background:"rgba(200,146,42,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.95rem",flexShrink:0}}>{st.icon}</div>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:"'Fraunces',serif",fontSize:"0.95rem",fontWeight:"600",color:C.dark,marginBottom:"0.2rem"}}>{st.title}</div>
+          <div style={{fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.82rem",color:C.muted,lineHeight:"1.45"}}>{st.desc}</div>
+          {st.partner && <div style={{marginTop:"0.3rem",fontFamily:"'Inter',system-ui",fontSize:"0.7rem",fontWeight:"600",color:C.gold}}>{st.partner}</div>}
+        </div>
+        <div style={{color:C.gold,fontSize:"1.1rem"}}>›</div>
+      </div>
+    ))}
+
+    {/* Partner Network */}
+    <div style={{marginTop:"1.4rem",marginBottom:"1.4rem"}}>
+      <div style={{fontFamily:"'Inter',system-ui",fontSize:"0.68rem",color:C.muted,fontWeight:"600",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>Partner pipeline</div>
+      <div style={{fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.82rem",color:C.muted,marginBottom:"0.9rem",lineHeight:"1.5"}}>
+        manzil is building a curated network of UAE property, banking, visa, and education partners — so every introduction is warm, not cold.
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.7rem"}}>
+        {[
+          { name:"Aldar Properties", cat:"Real Estate", desc:"Abu Dhabi's leading developer. Exclusive property introductions for manzil users.", logo:"🏢", tag:"Property partner" },
+          { name:"ADCB", cat:"Banking", desc:"Pre-arrival account setup. Priority onboarding for manzil users.", logo:"🏦", tag:"Banking partner" },
+          { name:"PRO Partner UAE", cat:"Visa & Legal", desc:"Golden Visa specialists. End-to-end application support.", logo:"🛂", tag:"Visa partner" },
+          { name:"Gems Education", cat:"Schools", desc:"25+ international schools across Dubai and Abu Dhabi.", logo:"🎓", tag:"Education partner" },
+        ].map((p,i) => (
+          <div key={i} style={{background:C.white,borderRadius:"12px",padding:"1rem",boxShadow:"0 1px 5px rgba(0,0,0,0.05)",display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{fontSize:"1.3rem"}}>{p.logo}</div>
+              <div style={{background:"rgba(200,146,42,0.10)",color:C.gold,padding:"0.15rem 0.5rem",borderRadius:"20px",fontSize:"0.62rem",fontWeight:"600",fontFamily:"'Inter',system-ui",whiteSpace:"nowrap"}}>{p.tag}</div>
+            </div>
+            <div style={{fontFamily:"'Fraunces',serif",fontSize:"0.88rem",fontWeight:"600",color:C.dark,lineHeight:"1.2"}}>{p.name}</div>
+            <div style={{fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.72rem",color:C.muted,lineHeight:"1.45"}}>{p.desc}</div>
+            <div style={{marginTop:"0.3rem",background:C.light,color:C.muted,padding:"0.4rem 0.7rem",borderRadius:"8px",fontSize:"0.72rem",fontWeight:"600",fontFamily:"'Inter',system-ui",textAlign:"center"}}>
+              Coming soon
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Ask anything */}
+    <div style={{marginTop:"1.4rem",background:C.white,borderRadius:"16px",padding:"1.3rem",boxShadow:"0 1px 6px rgba(0,0,0,0.06)"}}>
+      <div style={{fontFamily:"'Fraunces',serif",fontSize:"1.1rem",fontWeight:"700",color:C.dark,marginBottom:"0.3rem"}}>Ask me anything</div>
+      <div style={{fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.85rem",color:C.muted,marginBottom:"1rem",lineHeight:"1.55"}}>
+        I know your situation — answers are specific to you, not generic advice.
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.4rem",marginBottom:"0.9rem"}}>
+        {chips.map(c => (
+          <button key={c} onClick={()=>doAsk(c)}
+            style={{background:C.cream,border:`1px solid ${C.sand}`,color:C.text,padding:"0.45rem 1rem",borderRadius:"20px",fontSize:"0.84rem",cursor:"pointer",fontFamily:"'Inter',system-ui",fontWeight:"400",lineHeight:"1.4",textAlign:"left",width:"100%",display:"block"}}>
+            {c}
+          </button>
+        ))}
+      </div>
+      <div style={{display:"flex",gap:"0.4rem"}}>
+        <input value={askInput} onChange={e=>setAskInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAsk(askInput)} placeholder="Or ask your own question…"
+          style={{flex:1,border:`1.5px solid ${C.border}`,borderRadius:"12px",padding:"0.65rem 0.9rem",fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.88rem",color:C.dark,outline:"none",background:C.cream}}/>
+        <button onClick={()=>doAsk(askInput)} disabled={askLoading}
+          style={{background:C.gold,border:"none",borderRadius:"12px",padding:"0.65rem 1.1rem",color:C.dark,fontFamily:"'Inter',system-ui",fontWeight:"600",fontSize:"0.85rem",cursor:"pointer",whiteSpace:"nowrap",opacity:askLoading?0.6:1}}>
+          Ask →
+        </button>
+      </div>
+      {askLoading && (
+        <div style={{display:"flex",gap:"4px",padding:"0.5rem 0",marginTop:"0.5rem"}}>
+          <style>{`@keyframes b2{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}.e1,.e2,.e3{width:6px;height:6px;border-radius:50%;background:#D4B896;animation:b2 1.1s infinite}.e2{animation-delay:.17s}.e3{animation-delay:.34s}`}</style>
+          <div className="e1"/><div className="e2"/><div className="e3"/>
+        </div>
+      )}
+      {askAnswer && (
+        <div style={{marginTop:"0.85rem",padding:"1rem",background:C.cream,borderRadius:"12px",fontFamily:"'Inter',system-ui",fontWeight:"400",fontSize:"0.9rem",color:C.text,lineHeight:"1.7",borderLeft:`3px solid ${C.gold}`}}>
+          {askAnswer}
+        </div>
+      )}
+    </div>
+    <div style={{height:"2rem"}}/>
+  </div>
+</div>
+```
+
+);
+}
+
+ReactDOM.createRoot(document.getElementById(“root”)).render(<ManzilApp/>);
+</script>
+
+</body>
+</html>

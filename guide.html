@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>manzil — Find Your Place</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2B4E8MDH7N"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2B4E8MDH7N');</script>
+<!-- Microsoft Clarity -->
+<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","xdlgp0084x");</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',system-ui;background:#FAF7F2;color:#3D2E1A;overflow-x:hidden}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* SPLASH */
+#splash{background:#111827;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
+#splash::before{content:’’;position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(200,146,42,0.11) 0%,transparent 70%);pointer-events:none}
+.splash-logo{font-family:‘Fraunces’,serif;font-size:3.4rem;font-weight:700;color:#fff;letter-spacing:-0.03em;line-height:1;margin-bottom:0.25rem}
+.splash-ar{font-family:‘Fraunces’,serif;font-size:1.3rem;color:#C8922A;margin-bottom:1.8rem}
+.splash-tag{font-family:‘Fraunces’,serif;font-weight:600;font-size:1.2rem;color:#D1C5B4;max-width:320px;line-height:1.65;margin-bottom:2.4rem}
+.splash-btn{background:#C8922A;color:#111827;border:none;padding:0.9rem 2.2rem;font-family:‘Inter’,sans-serif;font-size:0.92rem;font-weight:600;border-radius:50px;cursor:pointer;letter-spacing:0.02em}
+.splash-note{margin-top:1.8rem;font-family:‘Inter’,sans-serif;font-size:0.75rem;color:#9CA3AF;letter-spacing:0.03em}
+
+/* CHAT */
+#chat{background:#FAF7F2}
+.chat-top{padding:0.9rem 1.2rem 0;display:flex;align-items:center;justify-content:space-between}
+.chat-logo{font-family:‘Fraunces’,serif;font-size:1rem;font-weight:700;color:#111827}
+.chat-dot{width:6px;height:6px;border-radius:50%;background:#C8922A;opacity:0.6}
+.chat-body{flex:1;overflow-y:auto;padding:0.8rem 1.2rem;max-width:640px;width:100%;margin:0 auto;padding-bottom:110px}
+.msg{display:flex;gap:0.6rem;margin-bottom:0.9rem;align-items:flex-end}
+.msg.user{flex-direction:row-reverse}
+.av{width:28px;height:28px;border-radius:50%;background:#C8922A;color:#111827;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;flex-shrink:0;margin-bottom:2px}
+.bubble{max-width:80%;padding:0.78rem 1rem;border-radius:18px;font-size:0.92rem;line-height:1.65;font-family:‘Inter’,sans-serif}
+.bubble.manzil{background:#fff;color:#3D2E1A;border-bottom-left-radius:3px;box-shadow:0 1px 8px rgba(0,0,0,0.08)}
+.bubble.user{background:#111827;color:#fff;border-bottom-right-radius:3px}
+.typing{display:flex;gap:5px;padding:0.65rem 0.9rem;background:#fff;border-radius:18px;border-bottom-left-radius:3px;box-shadow:0 1px 8px rgba(0,0,0,0.08)}
+.typing span{width:7px;height:7px;border-radius:50%;background:#D4B896;animation:bop 1.1s infinite}
+.typing span:nth-child(2){animation-delay:.17s}
+.typing span:nth-child(3){animation-delay:.34s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.chat-input-wrap{position:fixed;bottom:0;left:0;right:0;background:rgba(250,247,242,0.97);backdrop-filter:blur(12px);border-top:1px solid #E5E7EB;padding:0.85rem 1.2rem;z-index:100}
+.chat-input-inner{max-width:640px;margin:0 auto;display:flex;gap:0.5rem;align-items:center}
+.chat-input{flex:1;border:1.5px solid #E5E7EB;border-radius:24px;padding:0.72rem 1.1rem;font-family:‘Inter’,sans-serif;font-size:0.92rem;color:#111827;background:#fff;outline:none}
+.send-btn{width:44px;height:44px;border-radius:50%;background:#C8922A;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s}
+.send-btn:disabled{background:#E5E7EB;cursor:not-allowed}
+
+/* BUILDING */
+#building{background:#111827;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
+#building::before{content:’’;position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(200,146,42,0.12) 0%,transparent 70%);pointer-events:none}
+.build-logo{font-family:‘Fraunces’,serif;font-size:2rem;font-weight:700;color:#fff;letter-spacing:-0.02em;margin-bottom:0.3rem}
+.build-ar{font-family:‘Fraunces’,serif;font-size:1.1rem;color:#C8922A;margin-bottom:2.5rem}
+.build-msg{font-family:‘Fraunces’,serif;font-size:1rem;font-weight:400;color:#9CA3AF;margin-bottom:0.5rem;max-width:260px;line-height:1.6}
+.build-sub{font-family:‘Inter’,sans-serif;font-weight:300;font-size:0.75rem;color:#4B5563;margin-bottom:2.5rem}
+.build-dots{display:flex;gap:10px}
+.build-dots span{width:12px;height:12px;border-radius:50%;background:#C8922A;animation:bld 1.3s infinite;opacity:0.3}
+.build-dots span:nth-child(2){animation-delay:.22s}
+.build-dots span:nth-child(3){animation-delay:.44s}
+@keyframes bld{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-10px);opacity:1}}
+
+/* EMAIL */
+#email{background:#FAF7F2}
+.email-nav{background:#111827;padding:1rem 1.2rem}
+.email-nav-logo{font-family:‘Fraunces’,serif;font-size:1.1rem;font-weight:700;color:#fff}
+.email-body{flex:1;overflow-y:auto;padding:1.5rem 1.2rem;max-width:560px;width:100%;margin:0 auto}
+.email-title{font-family:‘Fraunces’,serif;font-size:1.4rem;font-weight:700;color:#111827;line-height:1.2;margin-bottom:0.6rem}
+.email-sub{font-family:‘Inter’,sans-serif;font-weight:400;font-size:0.9rem;color:#8C7A62;line-height:1.6;margin-bottom:1.8rem}
+.field-label{font-family:‘Inter’,sans-serif;font-size:0.75rem;font-weight:600;color:#8C7A62;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem;margin-top:1rem}
+.field-input{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:0.75rem 0.9rem;font-family:‘Inter’,sans-serif;font-size:0.92rem;color:#111827;background:#fff;outline:none}
+.killer-q{font-family:‘Inter’,sans-serif;font-size:0.75rem;font-weight:600;color:#8C7A62;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;margin-top:1.2rem}
+.blocker-btn{width:100%;padding:0.7rem 1rem;border-radius:10px;border:1.5px solid #E5E7EB;background:#fff;color:#8C7A62;font-family:‘Inter’,sans-serif;font-size:0.88rem;font-weight:400;text-align:left;cursor:pointer;margin-bottom:0.4rem;transition:all 0.15s}
+.blocker-btn.selected{border-color:#C8922A;background:rgba(200,146,42,0.06);color:#111827;font-weight:600}
+.submit-btn{width:100%;padding:0.9rem;background:#C8922A;border:none;border-radius:12px;font-family:‘Inter’,sans-serif;font-size:0.95rem;font-weight:600;color:#111827;cursor:pointer;margin-top:1.2rem;margin-bottom:0.8rem}
+.skip-btn{width:100%;padding:0.7rem;background:transparent;border:none;font-family:‘Inter’,sans-serif;font-size:0.85rem;color:#8C7A62;cursor:pointer;text-decoration:underline}
+.error-msg{color:#EF4444;font-size:0.82rem;font-family:‘Inter’,sans-serif;margin-top:0.5rem}
+
+/* DASHBOARD */
+#dashboard{background:#FAF7F2}
+.dash-nav{background:#111827;padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between}
+.dash-logo{font-family:‘Fraunces’,serif;font-size:1.1rem;font-weight:700;color:#fff}
+.dash-subt{font-family:‘Inter’,sans-serif;font-weight:300;font-size:0.75rem;color:#9CA3AF;margin-top:0.1rem}
+.restart-btn{background:transparent;border:1px solid rgba(200,146,42,0.35);color:#C8922A;padding:0.3rem 0.75rem;border-radius:20px;font-size:0.72rem;cursor:pointer;font-family:‘Inter’,sans-serif}
+.dash-body{flex:1;overflow-y:auto;padding:1.2rem;max-width:720px;width:100%;margin:0 auto;padding-bottom:2rem}
+.hero-card{background:#111827;border-radius:16px;padding:1.6rem;margin-bottom:1.2rem;position:relative;overflow:hidden}
+.hero-card::before{content:’’;position:absolute;top:-30%;right:-10%;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(200,146,42,0.10) 0%,transparent 70%);pointer-events:none}
+.hero-eye{font-family:‘Fraunces’,serif;font-size:0.68rem;color:#C8922A;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem}
+.hero-title{font-family:‘Fraunces’,serif;font-size:1.55rem;font-weight:700;color:#fff;line-height:1.15;margin-bottom:0.55rem}
+.hero-desc{font-family:‘Inter’,sans-serif;font-weight:300;font-size:0.84rem;color:#9CA3AF;line-height:1.7;max-width:420px}
+.hero-tags{margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap}
+.hero-tag{background:rgba(200,146,42,0.12);border:1px solid rgba(200,146,42,0.25);color:#C8922A;padding:0.2rem 0.65rem;border-radius:20px;font-size:0.7rem;font-weight:600;font-family:‘Fraunces’,serif}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:1.2rem}
+.stat{background:#fff;border-radius:12px;padding:1rem;box-shadow:0 1px 5px rgba(0,0,0,0.05)}
+.stat-label{font-family:‘Inter’,sans-serif;font-size:0.67rem;color:#8C7A62;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem}
+.stat-val{font-family:‘Fraunces’,serif;font-size:1.45rem;font-weight:700;color:#111827;line-height:1.1}
+.stat-sub{font-family:‘Inter’,sans-serif;font-weight:300;font-size:0.72rem;color:#8C7A62;margin-top:0.15rem}
+.sec-label{font-family:‘Inter’,sans-serif;font-size:0.68rem;color:#8C7A62;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.8rem}
+.step{background:#fff;border-radius:12px;padding:0.9rem 1rem;display:flex;align-items:center;gap:0.75rem;box-shadow:0 1px 4px rgba(0,0,0,0.04);margin-bottom:0.55rem}
+.step-icon{width:34px;height:34px;border-radius:9px;background:rgba(200,146,42,0.08);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0}
+.step-title{font-family:‘Fraunces’,serif;font-size:0.95rem;font-weight:600;color:#111827;margin-bottom:0.2rem}
+.step-desc{font-family:‘Inter’,sans-serif;font-weight:400;font-size:0.82rem;color:#8C7A62;line-height:1.55}
+.step-partner{font-family:‘Inter’,sans-serif;font-size:0.7rem;font-weight:600;color:#C8922A;margin-top:0.3rem}
+.step-arrow{color:#C8922A;font-size:1.1rem;margin-left:auto;flex-shrink:0}
+
+/* PARTNERS */
+.partner-section{margin-top:1.4rem;margin-bottom:1.4rem}
+.partner-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem}
+.partner-card{background:#fff;border-radius:12px;padding:1rem;box-shadow:0 1px 5px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:0.4rem}
+.partner-top{display:flex;align-items:center;justify-content:space-between}
+.partner-logo{font-size:1.3rem}
+.partner-tag{background:rgba(200,146,42,0.10);color:#C8922A;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.62rem;font-weight:600;font-family:‘Inter’,sans-serif;white-space:nowrap}
+.partner-name{font-family:‘Fraunces’,serif;font-size:0.88rem;font-weight:600;color:#111827;line-height:1.2}
+.partner-desc{font-family:‘Inter’,sans-serif;font-weight:400;font-size:0.72rem;color:#8C7A62;line-height:1.45}
+.partner-coming{margin-top:0.3rem;background:#F3F4F6;color:#8C7A62;padding:0.4rem 0.7rem;border-radius:8px;font-size:0.72rem;font-weight:600;font-family:‘Inter’,sans-serif;text-align:center}
+
+/* ASK */
+.ask-box{margin-top:1.4rem;background:#fff;border-radius:16px;padding:1.3rem;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
+.ask-title{font-family:‘Fraunces’,serif;font-size:1.1rem;font-weight:700;color:#111827;margin-bottom:0.3rem}
+.ask-sub{font-family:‘Inter’,sans-serif;font-weight:400;font-size:0.85rem;color:#8C7A62;margin-bottom:1rem;line-height:1.55}
+.ask-chips{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.9rem}
+.ask-chip{background:#FAF7F2;border:1px solid #E8D5B0;color:#3D2E1A;padding:0.45rem 1rem;border-radius:20px;font-size:0.84rem;cursor:pointer;font-family:‘Inter’,sans-serif;font-weight:400;line-height:1.4;text-align:left;width:100%}
+.ask-row{display:flex;gap:0.4rem}
+.ask-input{flex:1;border:1.5px solid #E5E7EB;border-radius:12px;padding:0.65rem 0.9rem;font-family:‘Inter’,sans-serif;font-weight:400;font-size:0.88rem;color:#111827;outline:none;background:#FAF7F2}
+.ask-btn{background:#C8922A;border:none;border-radius:12px;padding:0.65rem 1.1rem;color:#111827;font-family:‘Inter’,sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;white-space:nowrap}
+.ask-loading{display:flex;gap:4px;padding:0.5rem 0;margin-top:0.5rem}
+.ask-loading span{width:6px;height:6px;border-radius:50%;background:#D4B896;animation:bop 1.1s infinite}
+.ask-loading span:nth-child(2){animation-delay:.17s}
+.ask-loading span:nth-child(3){animation-delay:.34s}
+.ask-answer{margin-top:0.85rem;padding:1rem;background:#FAF7F2;border-radius:10px;font-family:‘Inter’,sans-serif;font-weight:400;font-size:0.9rem;color:#3D2E1A;line-height:1.7;border-left:3px solid #C8922A;display:none}
+</style>
+
+</head>
+<body>
+
+<!-- SPLASH -->
+
+<div class="screen active" id="splash">
+  <div class="splash-logo">manzil</div>
+  <div class="splash-ar">منزل</div>
+  <div class="splash-tag">The UAE is waiting.<br>Let's find your place in it.</div>
+  <button class="splash-btn" onclick="startChat()">Begin your journey →</button>
+  <div class="splash-note">A free, personalised UAE relocation guide</div>
+</div>
+
+<!-- CHAT -->
+
+<div class="screen" id="chat">
+  <div class="chat-top">
+    <div class="chat-logo">manzil</div>
+    <div class="chat-dot"></div>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-input-wrap">
+    <div class="chat-input-inner">
+      <input class="chat-input" id="chatInput" placeholder="Reply to manzil…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"/>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="#111827"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- BUILDING -->
+
+<div class="screen" id="building">
+  <div class="build-logo">manzil</div>
+  <div class="build-ar">منزل</div>
+  <div class="build-msg">Building your personalised roadmap</div>
+  <div class="build-sub">This usually takes a few seconds</div>
+  <div class="build-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- EMAIL -->
+
+<div class="screen" id="email">
+  <div class="email-nav"><div class="email-nav-logo">manzil</div></div>
+  <div class="email-body">
+    <div class="email-title">Want your roadmap saved?</div>
+    <div class="email-sub">Enter your details and we'll send you a copy — and keep you updated as new partners come online.</div>
+    <div class="field-label">First name</div>
+    <input class="field-input" id="fname" placeholder="Your first name" type="text"/>
+    <div class="field-label">Email</div>
+    <input class="field-input" id="femail" placeholder="your@email.com" type="email"/>
+    <div class="field-label">Nationality</div>
+    <input class="field-input" id="fnat" placeholder="e.g. British, Indian, Swiss" type="text"/>
+    <div class="field-label">Current city</div>
+    <input class="field-input" id="fcity" placeholder="e.g. London, Singapore, Mumbai" type="text"/>
+    <div class="killer-q">What's the biggest thing stopping you from moving today?</div>
+    <div id="blockerBtns"></div>
+    <div class="error-msg" id="emailError" style="display:none"></div>
+    <button class="submit-btn" onclick="submitEmail()">Save my roadmap →</button>
+    <button class="skip-btn" onclick="showScreen('dashboard')">Skip and view my roadmap</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+
+<div class="screen" id="dashboard">
+  <div class="dash-nav">
+    <div>
+      <div class="dash-logo">manzil</div>
+      <div class="dash-subt">Your personalised roadmap</div>
+    </div>
+    <button class="restart-btn" onclick="restart()">Start over</button>
+  </div>
+  <div class="dash-body">
+    <div class="hero-card">
+      <div class="hero-eye">Your manzil roadmap</div>
+      <div class="hero-title">Here's your personalised plan</div>
+      <div class="hero-desc">Built around your specific situation — with a growing network of UAE property, banking, and relocation partners.</div>
+      <div class="hero-tags">
+        <div class="hero-tag">📍 UAE Relocation</div>
+        <div class="hero-tag">✓ Profile complete</div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Income tax</div><div class="stat-val">0%</div><div class="stat-sub">in the UAE</div></div>
+      <div class="stat"><div class="stat-label">Golden Visa</div><div class="stat-val">10 yrs</div><div class="stat-sub">renewable residency</div></div>
+      <div class="stat"><div class="stat-label">Processing</div><div class="stat-val">5–15 days</div><div class="stat-sub">typical timeline</div></div>
+      <div class="stat"><div class="stat-label">Expat pop.</div><div class="stat-val">92%</div><div class="stat-sub">of UAE residents</div></div>
+    </div>
+    <div class="sec-label">Your next steps</div>
+    <div class="step"><div class="step-icon">🛂</div><div style="flex:1"><div class="step-title">Check your visa pathway</div><div class="step-desc">We'll identify whether the Golden Visa, Green Visa, or employment visa is right for you.</div><div class="step-partner">Visa support — specialist partner coming soon</div></div><div class="step-arrow">›</div></div>
+    <div class="step"><div class="step-icon">🏠</div><div style="flex:1"><div class="step-title">Find the right neighbourhood</div><div class="step-desc">Dubai and Abu Dhabi have distinct areas for different lifestyles. We'll match you to the right one.</div><div class="step-partner">Property introductions — developer partner in discussion</div></div><div class="step-arrow">›</div></div>
+    <div class="step"><div class="step-icon">🏦</div><div style="flex:1"><div class="step-title">Set up UAE banking</div><div class="step-desc">Several UAE banks allow pre-arrival account setup. We'll walk you through which fits your profile.</div><div class="step-partner">Banking setup — bank partner coming soon</div></div><div class="step-arrow">›</div></div>
+    <div class="step"><div class="step-icon">📋</div><div style="flex:1"><div class="step-title">Your document checklist</div><div class="step-desc">Personalised to your visa pathway and nationality — exactly what you need before you arrive.</div></div><div class="step-arrow">›</div></div>
+    <div class="step"><div class="step-icon">🤝</div><div style="flex:1"><div class="step-title">Join the manzil community</div><div class="step-desc">Connect with professionals who made the same move — by emirate, industry, and background. The part most relocation tools skip entirely.</div></div><div class="step-arrow">›</div></div>
+
+```
+<div class="partner-section">
+  <div class="sec-label">Partner pipeline</div>
+  <div style="font-family:'Inter',sans-serif;font-weight:400;font-size:0.82rem;color:#8C7A62;margin-bottom:0.9rem;line-height:1.5">manzil is building a curated network of UAE property, banking, visa, and education partners — so every introduction is warm, not cold.</div>
+  <div class="partner-grid">
+    <div class="partner-card"><div class="partner-top"><div class="partner-logo">🏢</div><div class="partner-tag">In discussion</div></div><div class="partner-name">Leading UAE Developer</div><div class="partner-desc">In discussion for exclusive property introductions for manzil users.</div><div class="partner-coming">Coming soon</div></div>
+    <div class="partner-card"><div class="partner-top"><div class="partner-logo">🏦</div><div class="partner-tag">Planned</div></div><div class="partner-name">UAE Retail Bank</div><div class="partner-desc">Pre-arrival account setup and priority onboarding for manzil users.</div><div class="partner-coming">Coming soon</div></div>
+    <div class="partner-card"><div class="partner-top"><div class="partner-logo">🛂</div><div class="partner-tag">Planned</div></div><div class="partner-name">Visa Specialists</div><div class="partner-desc">Golden Visa specialists. End-to-end application support.</div><div class="partner-coming">Coming soon</div></div>
+    <div class="partner-card"><div class="partner-top"><div class="partner-logo">🎓</div><div class="partner-tag">Planned</div></div><div class="partner-name">International Schools Network</div><div class="partner-desc">25+ international schools across Dubai and Abu Dhabi.</div><div class="partner-coming">Coming soon</div></div>
+  </div>
+</div>
+
+<div class="ask-box">
+  <div class="ask-title">Ask me anything</div>
+  <div class="ask-sub">I know your situation — answers are specific to you, not generic advice.</div>
+  <div class="ask-chips" id="askChips"></div>
+  <div class="ask-row">
+    <input class="ask-input" id="askInput" placeholder="Or ask your own question…" onkeydown="if(event.key==='Enter')doAsk(document.getElementById('askInput').value)"/>
+    <button class="ask-btn" onclick="doAsk(document.getElementById('askInput').value)">Ask →</button>
+  </div>
+  <div class="ask-loading" id="askLoading" style="display:none"><span></span><span></span><span></span></div>
+  <div class="ask-answer" id="askAnswer"></div>
+</div>
+<div style="height:2rem"></div>
+```
+
+  </div>
+</div>
+
+<script>
+const FALLBACK = [
+  "Hi — I'm manzil, your guide to building a life in the UAE. What's drawing you here?",
+  () => "Good to know. Are you moving alone, with a partner, or with family? That shapes everything from the neighbourhood to the visa pathway.",
+  () => "Understood. Are you thinking Dubai or Abu Dhabi — or are you still weighing the two?",
+  () => "Good choice. What do you do professionally? That'll help me identify the right visa pathway and the areas where your network will be strongest.",
+  () => "That's a strong profile for the UAE. When are you thinking of making the move — are we talking the next few months, or longer term?",
+  () => "Good. Last question — what feels like the biggest unknown right now? Visa and residency, finding the right neighbourhood, schools, or something else?",
+  () => "That's exactly what I needed. Let me put your personalised roadmap together. ##READY##"
+];
+
+const FALLBACK_ANSWERS = {
+  golden: "From application to approval, expect 3–6 weeks. The steps are: eligibility check, document gathering (passport, income proof, qualifications), submission through the ICP portal, then a medical and biometric appointment. The most common delay is missing documents — we'll give you a checklist so that doesn't happen to you.",
+  visa: "The right visa depends on your situation — the Golden Visa suits investors and skilled professionals, the Green Visa works well for freelancers and remote workers, and an employment visa is the standard route if you're joining a company. Tell me a bit more about your work and I can point you to the right one.",
+  bank: "Several UAE banks allow pre-arrival account setup for certain profiles. You'll need a valid passport, a signed tenancy contract or proof of address, and your visa once issued. We'll match you to the right one based on your profile.",
+  cost: "A comfortable lifestyle in Dubai runs AED 12,000–18,000 per month all-in. Abu Dhabi tends to be 10–15% less. The big variables are your accommodation choice and how much you eat out — Dubai dining is excellent but adds up quickly.",
+  safe: "The UAE experienced disruption during the conflict and some genuine uncertainty for residents. manzil won't minimise that. What we can say is that the post-conflict landscape has created a new baseline, and the long-term fundamentals — rule of law, infrastructure, economic stability, quality of life — remain intact. For the right person, the case for the UAE is still compelling. manzil helps you weigh that decision honestly, not optimistically.",
+  land: "First week priorities: book your Emirates ID appointment, open a bank account, get a local SIM, and register with your emirate's GDRFA office. The first month feels admin-heavy but it settles quickly — most people feel at home within 60 days."
+};
+
+const CHIPS = [
+  "What visa do I actually need?",
+  "How do I open a UAE bank account?",
+  "What's the real cost of living?",
+  "Is it safe to move here right now?",
+  "How long does the Golden Visa take?",
+  "What should I do first when I land?"
+];
+
+const BLOCKERS = ["Schools","Banking & finance","Finding the right property","Job or income uncertainty","Visa confusion","Safety concerns","I'm ready — just need guidance"];
+
+let messages = [], fbIdx = 1, selectedBlocker = '', convCtx = '';
+let isTyping = false, busy = false;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  el.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function scrollBottom() {
+  const b = document.getElementById('chatBody');
+  setTimeout(() => b.scrollTo({top:b.scrollHeight, behavior:'smooth'}), 80);
+}
+
+function addBubble(role, text) {
+  const body = document.getElementById('chatBody');
+  const row = document.createElement('div');
+  row.className = 'msg' + (role === 'user' ? ' user' : '');
+  if (role === 'manzil') {
+    row.innerHTML = `<div class="av">M</div><div class="bubble manzil">${text.replace(/\n/g,'<br>')}</div>`;
+  } else {
+    row.innerHTML = `<div class="bubble user">${text}</div>`;
+  }
+  body.appendChild(row);
+  scrollBottom();
+}
+
+function showTyping() {
+  const body = document.getElementById('chatBody');
+  const t = document.createElement('div');
+  t.className = 'msg'; t.id = 'typingEl';
+  t.innerHTML = `<div class="av">M</div><div class="typing"><span></span><span></span><span></span></div>`;
+  body.appendChild(t); scrollBottom();
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingEl');
+  if (t) t.remove();
+}
+
+async function callAPI(msgs) {
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:800,
+        system:`You are manzil — a warm, perceptive guide helping ambitious people move to the UAE. Have a warm natural conversation. Build a picture of their situation. Ask ONE question at a time. 2-4 sentences max. Never use bullet points. Never capitalise manzil. Do not ask for their name. Only discuss Dubai and Abu Dhabi. After 6-8 exchanges include ##READY## in your final message.`,
+        messages: msgs
+      })
+    });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    return d.content?.map(c=>c.text||'').join('') || '';
+  } catch(e) { return null; }
+}
+
+async function startChat() {
+  showScreen('chat');
+  isTyping = true;
+  document.getElementById('chatInput').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  const reply = await callAPI([]);
+  removeTyping();
+
+  const text = reply || FALLBACK[0];
+  const clean = text.replace('##READY##','').trim();
+  addBubble('manzil', clean);
+  messages.push({role:'assistant', content:clean});
+  isTyping = false;
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('chatInput').focus();
+}
+
+async function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || isTyping || busy) return;
+  busy = true;
+  input.value = '';
+  addBubble('user', text);
+  messages.push({role:'user', content:text});
+  isTyping = true;
+  document.getElementById('chatInput').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  const history = messages.map(m => ({role: m.role === 'manzil' ? 'assistant' : m.role, content: m.content}));
+  const reply = await callAPI(history);
+  removeTyping();
+
+  let text2, isReady = false;
+  if (reply) {
+    isReady = reply.includes('##READY##');
+    text2 = reply.replace('##READY##','').trim();
+  } else {
+    const fb = FALLBACK[Math.min(fbIdx, FALLBACK.length-1)];
+    const raw = typeof fb === 'function' ? fb() : fb;
+    isReady = raw.includes('##READY##');
+    text2 = raw.replace('##READY##','').trim();
+    fbIdx++;
+  }
+
+  addBubble('manzil', text2);
+  messages.push({role:'manzil', content:text2});
+  convCtx = messages.map(m=>`${m.role}: ${m.content}`).join('\n').slice(0,1500);
+  isTyping = false;
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+  busy = false;
+
+  if (isReady) {
+    setTimeout(() => {
+      showScreen('building');
+      setTimeout(() => {
+        setupEmailScreen();
+        showScreen('email');
+      }, 4500);
+    }, 1200);
+  }
+}
+
+function setupEmailScreen() {
+  const container = document.getElementById('blockerBtns');
+  container.innerHTML = '';
+  BLOCKERS.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'blocker-btn';
+    btn.textContent = b;
+    btn.onclick = () => {
+      document.querySelectorAll('.blocker-btn').forEach(x => x.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedBlocker = b;
+    };
+    container.appendChild(btn);
+  });
+}
+
+function submitEmail() {
+  const email = document.getElementById('femail').value.trim();
+  const errEl = document.getElementById('emailError');
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  // Open Tally form in new tab to collect full details
+  window.open('https://tally.so/r/A70dLz', '_blank');
+  // Take user to dashboard
+  setTimeout(() => showScreen('dashboard'), 500);
+}
+
+function setupDashboard() {
+  const chips = document.getElementById('askChips');
+  chips.innerHTML = '';
+  CHIPS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'ask-chip';
+    btn.textContent = c;
+    btn.onclick = () => doAsk(c);
+    chips.appendChild(btn);
+  });
+}
+
+async function doAsk(q) {
+  if (!q?.trim()) return;
+  document.getElementById('askInput').value = '';
+  document.getElementById('askLoading').style.display = 'flex';
+  document.getElementById('askAnswer').style.display = 'none';
+
+  let ans = '';
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:800,
+        system:`You are manzil, a warm UAE relocation guide. Context: ${convCtx || 'User completed UAE relocation onboarding'}. Answer in 3-5 sentences. Be specific, practical, warm. Never say you're Claude or an AI.`,
+        messages:[{role:"user", content:q}]
+      })
+    });
+    if (res.ok) {
+      const d = await res.json();
+      ans = d.content?.map(c=>c.text||'').join('') || '';
+    }
+  } catch(e) {}
+
+  if (!ans) {
+    const ql = q.toLowerCase();
+    const key = Object.keys(FALLBACK_ANSWERS).sort((a,b)=>b.length-a.length).find(k=>ql.includes(k));
+    ans = key ? FALLBACK_ANSWERS[key] : "Based on what you've shared, the UAE is well-suited to your situation. I'd recommend starting with a Golden Visa assessment and working backwards from there — it typically takes 3–6 weeks and opens every other door.";
+  }
+
+  document.getElementById('askLoading').style.display = 'none';
+  const ansEl = document.getElementById('askAnswer');
+  ansEl.textContent = ans;
+  ansEl.style.display = 'block';
+}
+
+function restart() {
+  messages = []; fbIdx = 1; selectedBlocker = ''; convCtx = '';
+  document.getElementById('chatBody').innerHTML = '';
+  document.getElementById('fname').value = '';
+  document.getElementById('femail').value = '';
+  document.getElementById('fnat').value = '';
+  document.getElementById('fcity').value = '';
+  document.getElementById('askAnswer').style.display = 'none';
+  showScreen('splash');
+}
+
+// Init
+window.addEventListener('load', () => {
+  setupDashboard();
+  showScreen('splash');
+});
+</script>
+
+</body>
+</html>
